@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { writeFileSync } from "node:fs";
 import { reviewRepository } from "./core.js";
+import { pathToFileURL } from "node:url";
 
 type Args = {
   command: string;
@@ -10,12 +11,12 @@ type Args = {
   validations: string[];
 };
 
-function parseArgs(argv: string[]): Args {
+export function parseArgs(argv: string[]): Args {
   const args: Args = { command: argv[0] ?? "", validations: [] };
   for (let index = 1; index < argv.length; index++) {
     const token = argv[index];
     if (token === "--repo") {
-      args.repositoryPath = argv[++index]?.split(" ")[0];
+      args.repositoryPath = argv[++index];
     } else if (token === "--base-ref") {
       args.baseRef = argv[++index];
     } else if (token === "--format") {
@@ -45,7 +46,12 @@ async function main() {
   console.log("Review report written to review-report.md");
 }
 
-main().catch((error) => {
-  console.error("Fatal error:", error);
-  process.exitCode = 1;
-});
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+  main().catch((error) => {
+    console.error("Fatal error:", error);
+    process.exitCode = 1;
+  });
+}
